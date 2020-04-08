@@ -1,20 +1,20 @@
 # java.lang.util.ArrayList 简介 
 
-ArrayList是一种以数组实现的List，与数组相比，它具有动态扩展的能力，因此也可称之为动态数组。
+ArrayList 是一种以数组实现的 List，与数组相比，它具有动态扩展的能力，因此也可称之为动态数组。
 
 ## （一）继承体系
 
-![img](ArrayList.resource/640.webp)
+![ArrayList](ArrayList.resource/ArrayList.png)
 
-ArrayList实现了List, RandomAccess, Cloneable, java.io.Serializable等接口。
+- ArrayList实现了List, RandomAccess, Cloneable, java.io.Serializable等接口。
 
-ArrayList实现了List，提供了基础的添加、删除、遍历等操作。
+- ArrayList实现了List，提供了基础的添加、删除、遍历等操作。
 
-ArrayList实现了RandomAccess，提供了随机访问的能力。
+- ArrayList实现了RandomAccess，提供了随机访问的能力。
 
-ArrayList实现了Cloneable，可以被克隆。
+- ArrayList实现了Cloneable，可以被克隆。
 
-ArrayList实现了Serializable，可以被序列化。
+- ArrayList实现了Serializable，可以被序列化。
 
 ## （二）源码解析
 
@@ -52,15 +52,15 @@ private int size;
 
 - DEFAULT_CAPACITY
 
-    默认容量为10，也就是通过 new ArrayList() 创建时的默认容量。
+    默认容量为10，也就是通过 `new ArrayList()` 创建时的默认容量。
 
 - EMPTY_ELEMENTDATA
 
-    空的数组，这种是通过 new ArrayList(0) 创建时用的是这个空数组。
+    空的数组，这种是通过 `new ArrayList(0)` 创建时用的是这个空数组。
 
 - DEFAULTCAPACITY_EMPTY_ELEMENTDATA
 
-    也是空数组，这种是通过 new ArrayList() 创建时用的是这个空数组，与EMPTY_ELEMENTDATA 的区别是在添**加第一个元素时使用这个空数组的会初始化为 DEFAULT_CAPACITY（10）个元素**。
+    也是空数组，这种是通过 `new ArrayList()` 创建时用的是这个空数组，与 EMPTY_ELEMENTDATA 的区别是在添**加第一个元素时使用这个空数组的会初始化为 DEFAULT_CAPACITY（10）个元素**。
 
 - elementData
 

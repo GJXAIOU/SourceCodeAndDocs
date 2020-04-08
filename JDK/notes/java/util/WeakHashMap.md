@@ -47,7 +47,7 @@ Entry<K,V>[] table;
 private int size;
 
 /**
- * 扩容门槛，等于capacity * loadFactor
+ * 扩容门槛，等于 capacity * loadFactor
  */
 private int threshold;
 
@@ -57,7 +57,7 @@ private int threshold;
 private final float loadFactor;
 
 /**
- * 引用队列，当弱键失效的时候会把Entry添加到这个队列中
+ * 引用队列，当弱键失效的时候会把 Entry 添加到这个队列中
  */
 private final ReferenceQueue<Object> queue = new ReferenceQueue<>();
 ```
@@ -74,13 +74,13 @@ private final ReferenceQueue<Object> queue = new ReferenceQueue<>();
 
     当弱键失效的时候会把 Entry 添加到这个队列中，当下次访问 map 的时候会把失效的 Entry 清除掉。
 
-### Entry内部类
+### （二）Entry内部类
 
-WeakHashMap内部的存储节点, 没有key属性。
+==WeakHashMap 内部的存储节点, 没有 key 属性，只有 value 属性==。
 
 ```java
 private static class Entry<K,V> extends WeakReference<Object> implements Map.Entry<K,V> {
-    // 可以发现没有key, 因为key是作为弱引用存到Referen类中
+    // 可以发现没有 key, 因为 key 是作为弱引用存到 Referen 类中
     V value;
     final int hash;
     Entry<K,V> next;
@@ -88,7 +88,7 @@ private static class Entry<K,V> extends WeakReference<Object> implements Map.Ent
     Entry(Object key, V value,
           ReferenceQueue<Object> queue,
           int hash, Entry<K,V> next) {
-        // 调用WeakReference的构造方法初始化key和引用队列
+        // 调用 WeakReference 的构造方法初始化 key 和引用队列
         super(key, queue);
         this.value = value;
         this.hash  = hash;
@@ -98,13 +98,13 @@ private static class Entry<K,V> extends WeakReference<Object> implements Map.Ent
 
 public class WeakReference<T> extends Reference<T> {
     public WeakReference(T referent, ReferenceQueue<? super T> q) {
-        // 调用Reference的构造方法初始化key和引用队列
+        // 调用 Reference 的构造方法初始化 key 和引用队列
         super(referent, q);
     }
 }
 
 public abstract class Reference<T> {
-    // 实际存储key的地方
+    // 实际存储 key 的地方
     private T referent;         /* Treated specially by GC */
     // 引用队列
     volatile ReferenceQueue<? super T> queue;
@@ -116,9 +116,9 @@ public abstract class Reference<T> {
 }
 ```
 
-从Entry的构造方法我们知道，key和queue最终会传到到Reference的构造方法中，这里的key就是Reference的referent属性，它会被gc特殊对待，即当没有强引用存在时，当下一次gc的时候会被清除。
+从 Entry 的构造方法我们知道，key 和 queue 最终会传到到 Reference 的构造方法中，这里的 key 就是 Reference 的 referent 属性，它会被 gc 特殊对待，即当没有强引用存在时，当下一次 gc 的时候会被清除。
 
-### 构造方法
+### （三）构造方法
 
 ```java
 public WeakHashMap(int initialCapacity, float loadFactor) {
@@ -155,17 +155,17 @@ public WeakHashMap(Map<? extends K, ? extends V> m) {
 }
 ```
 
-构造方法与HashMap基本类似，初始容量为大于等于传入容量最近的2的n次方，扩容门槛threshold等于capacity * loadFactor。
+构造方法与HashMap基本类似，初始容量为大于等于传入容量最近的 2 的 n 次方，扩容门槛 threshold 等于capacity * loadFactor。
 
-### put(K key, V value)方法
+### （四）put(K key, V value)方法
 
 添加元素的方法。
 
 ```java
 public V put(K key, V value) {
-    // 如果key为空，用空对象代替
+    // 如果 key 为空，用空对象代替
     Object k = maskNull(key);
-    // 计算key的hash值
+    // 计算 key 的 hash 值
     int h = hash(k);
     // 获取桶
     Entry<K,V>[] tab = getTable();
@@ -194,33 +194,31 @@ public V put(K key, V value) {
 }
 ```
 
-（1）计算hash；
+- 计算 hash；
 
-这里与HashMap有所不同，HashMap中如果key为空直接返回0，这里是用空对象来计算的。
+    这里与 HashMap 有所不同，HashMap 中如果 key 为空直接返回 0，这里是用空对象来计算的。另外打散方式也不同，HashMap 只用了一次异或，这里用了四次，HashMap 给出的解释是一次够了，而且就算冲突了也会转换成红黑树，对效率没什么影响。
 
-另外打散方式也不同，HashMap只用了一次异或，这里用了四次，HashMap给出的解释是一次够了，而且就算冲突了也会转换成红黑树，对效率没什么影响。
+- 计算在哪个桶中；
 
-（2）计算在哪个桶中；
+- 遍历桶对应的链表；
 
-（3）遍历桶对应的链表；
+- 如果找到元素就用新值替换旧值，并返回旧值；
 
-（4）如果找到元素就用新值替换旧值，并返回旧值；
+- 如果没找到就在链表头部插入新元素；
 
-（5）如果没找到就在链表头部插入新元素；
+    HashMap 就插入到链表尾部。
 
-HashMap就插入到链表尾部。
+- 如果元素数量达到了扩容门槛，就把容量扩大到 2 倍大小； 
 
-（6）如果元素数量达到了扩容门槛，就把容量扩大到2倍大小； 
+    HashMap 中是大于 threshold 才扩容，这里等于 threshold 就开始扩容了。
 
-HashMap中是大于threshold才扩容，这里等于threshold就开始扩容了。
-
-### resize(int newCapacity)方法
+### （五）==resize(int newCapacity)方法==
 
 扩容方法。
 
 ```java
 void resize(int newCapacity) {
-    // 获取旧桶，getTable()的时候会剔除失效的Entry
+    // 获取旧桶，getTable() 的时候会剔除失效的 Entry
     Entry<K,V>[] oldTable = getTable();
     // 旧容量
     int oldCapacity = oldTable.length;
@@ -246,7 +244,7 @@ void resize(int newCapacity) {
         threshold = (int)(newCapacity * loadFactor);
     } else {
         // 否则把元素再转移回旧桶，还是使用旧桶
-        // 因为在transfer的时候会清除失效的Entry，所以元素个数可能没有那么大了，就不需要扩容了
+        // 因为在 transfer 的时候会清除失效的 Entry，所以元素个数可能没有那么大了，就不需要扩容了
         expungeStaleEntries();
         transfer(newTable, oldTable);
         table = oldTable;
@@ -261,7 +259,7 @@ private void transfer(Entry<K,V>[] src, Entry<K,V>[] dest) {
         while (e != null) {
             Entry<K,V> next = e.next;
             Object key = e.get();
-            // 如果key等于了null就清除，说明key被gc清理掉了，则把整个Entry清除
+            // 如果 key 等于了 null 就清除，说明 key 被 gc 清理掉了，则把整个 Entry 清除
             if (key == null) {
                 e.next = null;  // Help GC
                 e.value = null; //  "   "
@@ -278,24 +276,24 @@ private void transfer(Entry<K,V>[] src, Entry<K,V>[] dest) {
 }
 ```
 
-（1）判断旧容量是否达到最大容量；
+- 判断旧容量是否达到最大容量；
 
-（2）新建新桶并把元素全部转移到新桶中；
+- 新建新桶并把元素全部转移到新桶中；
 
-（3）如果转移后元素个数不到扩容门槛的一半，则把元素再转移回旧桶，继续使用旧桶，说明不需要扩容；
+- 如果转移后元素个数不到扩容门槛的一半，则把元素再转移回旧桶，继续使用旧桶，说明不需要扩容；（==因为在 transfer 的时候会清除失效的 Entry，所以元素个数可能没有那么大了，就不需要扩容了==）
 
-（4）否则使用新桶，并计算新的扩容门槛；
+- 否则使用新桶，并计算新的扩容门槛；
 
-（5）转移元素的过程中会把key为null的元素清除掉，所以size会变小；
+- 转移元素的过程中会把 key 为 null 的元素清除掉，所以 size 会变小；
 
-### get(Object key)方法
+### （六）get(Object key)方法
 
 获取元素。
 
 ```java
 public V get(Object key) {
     Object k = maskNull(key);
-    // 计算hash
+    // 计算 hash
     int h = hash(k);
     Entry<K,V>[] tab = getTable();
     int index = indexFor(h, tab.length);
@@ -310,22 +308,22 @@ public V get(Object key) {
 }
 ```
 
-（1）计算hash值；
+- 计算 hash 值；
 
-（2）遍历所在桶对应的链表；
+- 遍历所在桶对应的链表；
 
-（3）如果找到了就返回元素的value值；
+- 如果找到了就返回元素的 value 值；
 
-（4）如果没找到就返回空；
+- 如果没找到就返回空；
 
-### remove(Object key)方法
+### （七）remove(Object key)方法
 
 移除元素。
 
 ```java
 public V remove(Object key) {
     Object k = maskNull(key);
-    // 计算hash
+    // 计算 hash
     int h = hash(k);
     Entry<K,V>[] tab = getTable();
     int i = indexFor(h, tab.length);
@@ -357,17 +355,17 @@ public V remove(Object key) {
 }
 ```
 
-（1）计算hash；
+- 计算 hash；
 
-（2）找到所在的桶；
+- 找到所在的桶；
 
-（3）遍历桶对应的链表；
+- 遍历桶对应的链表；
 
-（4）如果找到了就删除该节点，并返回该节点的value值；
+- 如果找到了就删除该节点，并返回该节点的 value 值；
 
-（5）如果没找到就返回null；
+- 如果没找到就返回null；
 
-### expungeStaleEntries()方法
+### （八）expungeStaleEntries()方法
 
 剔除失效的Entry。
 
@@ -406,84 +404,87 @@ private void expungeStaleEntries() {
 }
 ```
 
-（1）当key失效的时候gc会自动把对应的Entry添加到这个引用队列中；
+- 当 key 失效的时候 GC 会自动把对应的 Entry 添加到这个引用队列中；
 
-（2）所有对map的操作都会直接或间接地调用到这个方法先移除失效的Entry，比如getTable()、size()、resize()；
+- 所有对 map 的操作都会直接或间接地调用到这个方法先移除失效的 Entry，比如 getTable()、size()、resize()；
 
-（3）这个方法的目的就是遍历引用队列，并把其中保存的Entry从map中移除掉，具体的过程请看类注释；
+- 这个方法的目的就是遍历引用队列，并把其中保存的 Entry 从 map 中移除掉，具体的过程请看类注释；
 
-（4）从这里可以看到移除Entry的同时把value也一并置为null帮助gc清理元素，防御性编程。
+- 从这里可以看到移除 Entry 的同时把 value 也一并置为 null 帮助 gc 清理元素，防御性编程。
 
-## 使用案例
+## （九）使用案例
 
 说了这么多，不举个使用的例子怎么过得去。
 
 ```java
-package com.coolcoding.code;
+package javaTest.lang.util;
 
 import java.util.Map;
 import java.util.WeakHashMap;
 
+/**
+ * @Author GJXAIOU
+ * @Date 2020/2/29 20:51
+ */
 public class WeakHashMapTest {
 
-public static void main(String[] args) {
-    Map<String, Integer> map = new WeakHashMap<>(3);
+    public static void main(String[] args) {
+        Map<String, Integer> map = new WeakHashMap<>(3);
 
-    // 放入3个new String()声明的字符串
-    map.put(new String("1"), 1);
-    map.put(new String("2"), 2);
-    map.put(new String("3"), 3);
+        // 放入 3 个 new String() 声明的字符串
+        map.put(new String("1"), 1);
+        map.put(new String("2"), 2);
+        map.put(new String("3"), 3);
 
-    // 放入不用new String()声明的字符串
-    map.put("6", 6);
+        // 放入不用 new String() 声明的字符串，这是强引用
+        map.put("6", 6);
 
-    // 使用key强引用"3"这个字符串
-    String key = null;
-    for (String s : map.keySet()) {
-        // 这个"3"和new String("3")不是一个引用
-        if (s.equals("3")) {
-            key = s;
+        // 使用 key 强引用"3"这个字符串
+        String key = null;
+        for (String s : map.keySet()) {
+            // 这个"3"和new String("3")不是一个引用
+            if (s.equals("3")) {
+                key = s;
+            }
         }
+
+        // 输出{6=6, 1=1, 2=2, 3=3}，未 gc 所有 key 都可以打印出来
+        System.out.println(map);
+
+        // gc 一下
+        System.gc();
+
+        // 放一个 new String() 声明的字符串
+        map.put(new String("4"), 4);
+
+        // 输出{4=4, 6=6, 3=3}，gc 后放入的值和强引用的 key 可以打印出来
+        System.out.println(map);
+
+        // key 与"3"的引用断裂
+        key = null;
+
+        // gc 一下
+        System.gc();
+
+        // 输出{6=6}，gc 后强引用的 key 可以打印出来
+        System.out.println(map);
     }
-
-    // 输出{6=6, 1=1, 2=2, 3=3}，未gc所有key都可以打印出来
-    System.out.println(map);
-
-    // gc一下
-    System.gc();
-
-    // 放一个new String()声明的字符串
-    map.put(new String("4"), 4);
-
-    // 输出{4=4, 6=6, 3=3}，gc后放入的值和强引用的key可以打印出来
-    System.out.println(map);
-
-    // key与"3"的引用断裂
-    key = null;
-
-    // gc一下
-    System.gc();
-
-    // 输出{6=6}，gc后强引用的key可以打印出来
-    System.out.println(map);
 }
-}
-
 ```
 
-在这里通过new String()声明的变量才是弱引用，使用"6"这种声明方式会一直存在于常量池中，不会被清理，所以"6"这个元素会一直在map里面，其它的元素随着gc都会被清理掉。
+==在这里通过 new String() 声明的变量才是弱引用，使用"6"这种声明方式会一直存在于常量池中，不会被清理，所以"6"这个元素会一直在map里面，其它的元素随着gc都会被清理掉==。
 
 ## 总结
 
-（1）WeakHashMap使用（数组 + 链表）存储结构；
+- WeakHashMap 使用（数组 + 链表）存储结构；
 
-（2）WeakHashMap中的key是弱引用，gc的时候会被清除；
+- WeakHashMap 中的 key 是弱引用，gc 的时候会被清除；
 
-（3）每次对map的操作都会剔除失效key对应的Entry；
+- 每次对 map 的操作都会剔除失效 key 对应的 Entry；
 
-（4）使用String作为key时，一定要使用new String()这样的方式声明key，才会失效，其它的基本类型的包装类型是一样的；
+- ==使用 String 作为 key 时，一定要使用 new String() 这样的方式声明key，才会失效，其它的基本类型的包装类型是一样的==；
 
-（5）WeakHashMap常用来作为缓存使用；
+- WeakHashMap常用来作为缓存使用；
 
 
 
