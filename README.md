@@ -4,7 +4,6 @@
 
 ## JDK
 
-- 时间：2020.02-2020.04
 - 阅读顺序：基础类、简单集合、原子类、同步器、并发集合、多线程
 
 **已完成**：
@@ -15,7 +14,7 @@ java
     - Object.java
     - Thread.java
     - Runnable.java
-    - ThreadLocal.java(待定)
+    - ThreadLocal.java
     - StringBuffer.java
     - StringBuilder.java
 - util
@@ -30,12 +29,15 @@ java
     - TreeMap.java(待定)
     - Vector.java(待定)
     - concurrent
+        - Atomic
+            - AtomicInteger.java
         - locks
-        - Lock.java
+            - Lock.java
         - CopyOnWriteArrayList.java
+        - CountDownLatch.java
+        - CyclicBarrier.java
+        - ThreadPoolExecutor.java
     - ConcurrentHashMap.java（待定）
-
-
 
 ## Spring
 
