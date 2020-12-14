@@ -582,7 +582,9 @@ The final part of our application is the `main` method. This is a standard metho
 
 At this point, your application should work. Since you used the `spring-boot-starter-parent` POM, you have a useful `run` goal that you can use to start the application. Type `mvn spring-boot:run` from the root project directory to start the application. You should see output similar to the following:
 
-```
+此时，你的应用程序应该可以工作了，因为你使用了 `spring-boot-starter-parent` POM，你拥有了一个可以用于启动程序的有用的 `run` 目标。在项目的根目录下使用 `mvn spring-boot:run` 启动该应用。你应该会看到类似下面的输出：
+
+```shell
 $ mvn spring-boot:run
 
   .   ____          _            __ _ _
@@ -600,25 +602,39 @@ $ mvn spring-boot:run
 
 If you open a web browser to `localhost:8080`, you should see the following output:
 
+如果你开启一个浏览器并输入 `localhost:8080`，你应该会看到如下输出：
+
 ```
 Hello World!
 ```
 
 To gracefully exit the application, press `ctrl-c`.
 
-### 4.5. Creating an Executable Jar
+如果想优雅的退出该程序，使用 `ctrl-c`
 
-We finish our example by creating a completely self-contained executable jar file that we could run in production. Executable jars (sometimes called “fat jars”) are archives containing your compiled classes along with all of the jar dependencies that your code needs to run.
+### 4.5. Creating an Executable Jar（创建一个可执行的 Jar 包）
+
+We finish our example by creating a completely self-contained executable jar file that we could run in production. Executable jars (sometimes called “fat jars”) are archives（存档） containing your compiled classes along with all of the jar dependencies that your code needs to run.
+
+我们通过创建一个完全自包含的可执行 Jar 包来结束我们的示例，该 Jar 包可以在生产环境中运行。可执行的 Jar（通常也称为 「fat jars」）是一种归档文件，其中包括编译后的类和代码运行所必须的所有 Jar 包依赖。
 
 > ​																			Executable jars and Java
 >
 > Java does not provide a standard way to load nested jar files (jar files that are themselves contained within a jar). This can be problematic if you are looking to distribute a self-contained application.
 >
-> To solve this problem, many developers use “uber” jars. An uber jar packages all the classes from all the application’s dependencies into a single archive. The problem with this approach is that it becomes hard to see which libraries are in your application. It can also be problematic if the same filename is used (but with different content) in multiple jars.
+> Java 没有提供加载内嵌 jar 文件的标准化方式（jar 文件就是指他们自身被包含在另一个 jar 中）。如果你希望发布一个自包含的应用程序可能就会有问题。
+>
+> To solve this problem, many developers use “uber” jars. An uber jar packages all the classes from all the application’s dependencies into a single archive. The problem with this approach is that it becomes hard to see which libraries are in your application. It can also be problematic if the same filename is used (but with different content) in multiple jars. 
+>
+> 为了解决这个问题，许多开发者使用 「uber」Jar 。Uber Jar 将所有应用程序依赖的类打包到一个 jar 包中。这种方案的问题是很难在你的应用中看到包含哪些库，同样连一个问题是，在不同 jar 包中可能有相同的文件名称（但是内容不同）。
 >
 > Spring Boot takes a [different approach](https://docs.spring.io/spring-boot/docs/2.4.2-SNAPSHOT/reference/html/appendix-executable-jar-format.html#executable-jar) and lets you actually nest jars directly.
+>
+> Spring Boot 采用了一种  [不同的方式](https://docs.spring.io/spring-boot/docs/2.4.2-SNAPSHOT/reference/html/appendix-executable-jar-format.html#executable-jar) 使你可以直接内嵌 jar 包。
 
 To create an executable jar, we need to add the `spring-boot-maven-plugin` to our `pom.xml`. To do so, insert the following lines just below the `dependencies` section:
+
+为了创建一个可执行的 jar，我们需要在 `pom.xml` 中添加 `spring-boot-maven-plugin`。为此，请在 `dependencies` 部分添加以下内容。
 
 ```xml
 <build>
@@ -631,11 +647,15 @@ To create an executable jar, we need to add the `spring-boot-maven-plugin` to ou
 </build>
 ```
 
-> More ActionsThe `spring-boot-starter-parent` POM includes `<executions>` configuration to bind the `repackage` goal. If you do not use the parent POM, you need to declare this configuration yourself. See the [plugin documentation](https://docs.spring.io/spring-boot/docs/2.4.2-SNAPSHOT/maven-plugin/reference/htmlsingle/#getting-started) for details.
+> The `spring-boot-starter-parent` POM includes `<executions>` configuration to bind the `repackage` goal. If you do not use the parent POM, you need to declare this configuration yourself. See the [plugin documentation](https://docs.spring.io/spring-boot/docs/2.4.2-SNAPSHOT/maven-plugin/reference/htmlsingle/#getting-started) for details.
+>
+> `spring-boot-starter-parent` POM 包括绑定 `repackage` 目标的 `<executions>` 配置。如果你没有使用父 POM，你需要自己声明这个配置。可以查看 [plugin documentation](https://docs.spring.io/spring-boot/docs/2.4.2-SNAPSHOT/maven-plugin/reference/htmlsingle/#getting-started) 获取详细说明。
 
 Save your `pom.xml` and run `mvn package` from the command line, as follows:
 
-```
+保存你的 `pom.xml` 并且在命令行中执行 `mvn package` ，结果如下所示：
+
+```shell
 $ mvn package
 
 [INFO] Scanning for projects...
@@ -655,15 +675,21 @@ $ mvn package
 
 If you look in the `target` directory, you should see `myproject-0.0.1-SNAPSHOT.jar`. The file should be around 10 MB in size. If you want to peek inside, you can use `jar tvf`, as follows:
 
-```
+如果你查看 `target` 目录，你应该能看到 `myproject-0.0.1-SHAPSHOT.jar`。这个文件大概 10MB，如果你想查看内部可以像下面一下使用 `jar tvf`。
+
+```shell
 $ jar tvf target/myproject-0.0.1-SNAPSHOT.jar
 ```
 
 You should also see a much smaller file named `myproject-0.0.1-SNAPSHOT.jar.original` in the `target` directory. This is the original jar file that Maven created before it was repackaged by Spring Boot.
 
+你应该在 `target`目录也能看到一个名称为 `myproject-0.0.1-SHAPSHOT.jar.original` 的更小的文件。这是 Maven 在 Spring Boot 重新打包之前创建的原始 jar 文件。
+
 To run that application, use the `java -jar` command, as follows:
 
-```
+在命令行中使用 `java -jar` 可以执行此程序，示例如下：
+
+```shell
 $ java -jar target/myproject-0.0.1-SNAPSHOT.jar
 
   .   ____          _            __ _ _
@@ -680,6 +706,12 @@ $ java -jar target/myproject-0.0.1-SNAPSHOT.jar
 ```
 
 As before, to exit the application, press `ctrl-c`.
+
+像之前一样，如果想退出该程序，执行 `ctrl-c`
+
+>注：在 `pom.xml` 目录下使用 `mvn package` 之后的 `target` 目录
+>
+>![image-20201214094320488](Getting Started.resource/image-20201214094320488.png)
 
 ## 5. What to Read Next
 
