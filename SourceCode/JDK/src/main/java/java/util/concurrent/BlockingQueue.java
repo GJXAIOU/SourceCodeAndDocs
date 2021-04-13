@@ -14,6 +14,12 @@ package java.util.concurrent;
 
 import java.util.Collection;
 import java.util.Queue;
+/**
+ * 一种队列，它还支持在检索元素时(从队头获取元素)等待队列变为非空，在存储元素时等待队列中的空间变为可用的操作。
+ *
+ * BlockingQueue方法有四种形式，它们有不同的处理操作的方法，这些操作不能立即满足，但可能在将来的某个时候满足：一种方法抛出异常，另一种方法返回特殊值（null或false
+ * ，具体取决于操作），第三个线程无限期地阻塞当前线程，直到操作成功为止，第四个线程在放弃之前只阻塞给定的最大时间限制。下表总结了这些方法：
+ */
 
 /**
  * A {@link java.util.Queue} that additionally supports operations

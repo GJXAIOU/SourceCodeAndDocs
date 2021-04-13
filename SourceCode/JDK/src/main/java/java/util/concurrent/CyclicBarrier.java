@@ -138,6 +138,7 @@ import java.util.concurrent.locks.ReentrantLock;
  */
 public class CyclicBarrier {
     /**
+     * 每次屏障被冲破之后就相当于进入了下一个 generation
      * Each use of the barrier is represented as a generation instance.
      * The generation changes whenever the barrier is tripped, or
      * is reset. There can be many generations associated with threads
@@ -176,8 +177,10 @@ public class CyclicBarrier {
      */
     private void nextGeneration() {
         // signal completion of last generation
+        // 唤醒所有等待的线程
         trip.signalAll();
         // set up next generation
+        // count 恢复到初始情况
         count = parties;
         generation = new Generation();
     }
@@ -198,6 +201,7 @@ public class CyclicBarrier {
     private int dowait(boolean timed, long nanos)
             throws InterruptedException, BrokenBarrierException,
             TimeoutException {
+        // 获取锁
         final ReentrantLock lock = this.lock;
         lock.lock();
         try {
@@ -212,13 +216,17 @@ public class CyclicBarrier {
             }
 
             int index = --count;
+            // index 为 0 则所有线程都到达了屏障前面
             if (index == 0) {  // tripped
+                // 是否执行了后面的 Runnable 方法
                 boolean ranAction = false;
+                // 执行 Runnable 的调用
                 try {
                     final Runnable command = barrierCommand;
                     if (command != null)
                         command.run();
                     ranAction = true;
+                    // 切换到下一代
                     nextGeneration();
                     return 0;
                 } finally {
@@ -230,8 +238,11 @@ public class CyclicBarrier {
             // loop until tripped, broken, interrupted, or timed out
             for (;;) {
                 try {
+                    // 如果没有设置超时时间
                     if (!timed)
+                        // trip 是 condition 的实例，等待条件变量 condition 发出 signal 或者 signalAll
                         trip.await();
+                    // 设置了超时时间
                     else if (nanos > 0L)
                         nanos = trip.awaitNanos(nanos);
                 } catch (InterruptedException ie) {
@@ -277,6 +288,8 @@ public class CyclicBarrier {
     public CyclicBarrier(int parties, Runnable barrierAction) {
         if (parties <= 0) throw new IllegalArgumentException();
         this.parties = parties;
+        // count 为仍然在等待的参与方数量，扮演计数器的作用。当一个周期结束开始新的周期的时候，count 重新被赋值为 parties。parties 为 final
+        // 不可变，但是 count 可变。
         this.count = parties;
         this.barrierCommand = barrierAction;
     }
@@ -304,9 +317,16 @@ public class CyclicBarrier {
     }
 
     /**
+     * 等待，直到所有的参与方均在屏障前调用了 await 方法。
      * Waits until all {@linkplain #getParties parties} have invoked
      * {@code await} on this barrier.
      *
+     * 如果当前线程不是最后一个到达的，那么其不会被调度，直到下面情况之一发生：
+     * 最后一个线程到达
+     * 其它线程中断了当前线程
+     * 其它线程中断了其中一个已经等待的线程
+     * 其它线程上等待通过该屏障的等待时间过了
+     * 其它线程在该屏障上重置了
      * <p>If the current thread is not the last to arrive then it is
      * disabled for thread scheduling purposes and lies dormant until
      * one of the following things happens:
@@ -421,12 +441,13 @@ public class CyclicBarrier {
      * @throws InterruptedException if the current thread was interrupted
      *         while waiting
      * @throws TimeoutException if the specified timeout elapses.
-     *         In this case the barrier will be broken.
+     *         In this case the barrier will be broken.  如果发生超时时间，屏障 Barrier 就会被破坏，当 Barrier
+     *         被破坏就会触发下面 BrokenBarrierException 异常。
      * @throws BrokenBarrierException if <em>another</em> thread was
      *         interrupted or timed out while the current thread was
      *         waiting, or the barrier was reset, or the barrier was broken
      *         when {@code await} was called, or the barrier action (if
-     *         present) failed due to an exception
+     *         present) failed due to an exception 当当前的线程正在等待的时候另一个线程超时了，
      */
     public int await(long timeout, TimeUnit unit)
             throws InterruptedException,

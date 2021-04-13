@@ -4,11 +4,6 @@ package java.lang;
  * @Author GJXAIOU
  * @Date 2020/2/22 20:27
  */
-/*
- * Copyright (c) 1994, 2012, Oracle and/or its affiliates. All rights reserved.
- * ORACLE PROPRIETARY/CONFIDENTIAL. Use is subject to license terms.
-
- */
 
 public class Object {
 
@@ -59,6 +54,8 @@ public class Object {
     public String toString() {
         return getClass().getName() + "@" + Integer.toHexString(hashCode());
     }
+
+
 
     // ---------------下面的 notify()/notifyAll()/wait 方法均与线程同步相关-----------
 
@@ -132,10 +129,20 @@ public class Object {
     }
 
     /**
-     * 在其他线程调用此对象的 notify()方法或 notifyAll()方法前,导致当前线程等待。换句话说,此方法的行为就好
-     * 像它仅执行wait(0)调用一样。当前线程必须拥有此对象监视器。
-     * 该线程发布对此监视器的所有权并等待,直到其他线程通过调用 notify 方法或 notifyAll 方法通知在此对象的监视
+     * 使得当前线程等待，直到在其他线程调用此对象的 notify()方法或 notifyAll() 方法。换句话说,此方法的行为就好
+     * 像它仅执行wait(0)调用一样。
+     * 当前线程必须拥有此对象监视器（锁）。该线程会释放掉对此监视器的所有权并等待,直到其他线程通过调用 notify 方法或 notifyAll 方法通知在此对象的监视
      * 器上等待的线程醒来,然后该线程将等到重新获得对监视器的所有权后才能继续执行。
+     * 总结：1.如果要调用 wait() 方法，当前线程必须要拥有这个对象的 monitor。
+     *      2.如果调用了 wait() 方法，
+     */
+    /**
+     * 使得当前线程等待，直到在其他线程调用此对象的 notify()方法或 notifyAll() 方法。换句话说,此方法的行为就好
+     * 像它仅执行wait(0)调用一样。
+     * 当前线程必须拥有此对象监视器（锁）。该线程会释放掉对此监视器的所有权并等待,直到其他线程通过调用 notify 方法或 notifyAll 方法通知在此对象的监视
+     * 器上等待的线程醒来,然后该线程将等到重新获得对监视器的所有权后才能继续执行。
+     * 总结：1.如果要调用 wait() 方法，当前线程必须要拥有这个对象的 monitor。
+     *      2.如果调用了 wait() 方法，
      */
     public final void wait() throws InterruptedException {
         wait(0);

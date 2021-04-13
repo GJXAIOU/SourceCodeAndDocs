@@ -37,6 +37,7 @@ package java.util.concurrent;
 import java.util.concurrent.locks.AbstractQueuedSynchronizer;
 
 /**
+ * 一种同步辅助工具，允许一个或多个线程等待一组在其他线程中执行的操作完成。
  * A synchronization aid that allows one or more threads to wait until
  * a set of operations being performed in other threads completes.
  *
@@ -170,15 +171,20 @@ public class CountDownLatch {
         }
 
         protected int tryAcquireShared(int acquires) {
+            // getState 即获取计数器的值
             return (getState() == 0) ? 1 : -1;
         }
 
         protected boolean tryReleaseShared(int releases) {
+            // 将计数器的值每次减一，当归零之后发出 signal
             // Decrement count; signal when transition to zero
             for (;;) {
+                // 获取计数器的值
                 int c = getState();
                 if (c == 0)
+                    // 当前计数器已经归零了，不能再减了，直接返回
                     return false;
+                // 如果不为 0
                 int nextc = c-1;
                 if (compareAndSetState(c, nextc))
                     return nextc == 0;
@@ -201,6 +207,7 @@ public class CountDownLatch {
     }
 
     /**
+     *  await 方法会导致当前详细进入等待状态，直到 latch 减到 0 或者线程被中断了。
      * Causes the current thread to wait until the latch has counted down to
      * zero, unless the thread is {@linkplain Thread#interrupt interrupted}.
      *
@@ -228,10 +235,14 @@ public class CountDownLatch {
      *         while waiting
      */
     public void await() throws InterruptedException {
+        // 调用 acquireSharedInterruptibly 方法，其中 1 的值无所谓多少，只是为了适配 AQS 方法必须有参数。该方法实现会判断
+        // if (tryAcquireShared(arg) < 0)，内部实现为
         sync.acquireSharedInterruptibly(1);
     }
 
     /**
+     * 主要是防止计数器一直减不到 0 导致主线程一直阻塞，重载版本中可以设置一个超时时间，过了超时时间就不再等待了。
+     *
      * Causes the current thread to wait until the latch has counted down to
      * zero, unless the thread is {@linkplain Thread#interrupt interrupted},
      * or the specified waiting time elapses.
